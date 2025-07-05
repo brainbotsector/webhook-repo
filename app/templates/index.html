@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub Actions</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .event { padding: 10px; margin: 10px 0; border-left: 4px solid #0366d6; background: #f6f8fa; }
+        .timestamp { color: #586069; font-size: 0.9em; }
+        .loading { color: #586069; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>GitHub Events Live</h1>
+    <div id="events">
+        {% if events %}
+            {% for event in events %}
+                <div class="event">
+                    {{ format_event(event) }}
+                    <p class="timestamp">{{ format_display_time(event.timestamp) }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="event">
+                <p>No events found yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+     
+        document.addEventListener('DOMContentLoaded', refreshEvents);
+        
+        function format_display_time(isoString) {
+            const date = new Date(isoString);
+            const options = {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Asia/Kolkata'
+            };
+            return date.toLocaleString('en-IN', options) + ' IST';
+        }
+
+        function format_event(event) {
+            switch(event.action) {
+                case 'PUSH':
+                    return `<p><strong>${event.author}</strong> pushed to <strong>${event.to_branch}</strong></p>`;
+                case 'PULL REQUEST':
+                    return `<p><strong>${event.author}</strong> submitted a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong></p>`;
+                case 'MERGE':
+                    return `<p><strong>${event.author}</strong> merged branch <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong></p>`;
+                default:
+                    return `<p>Unknown action: ${event.action}</p>`;
+            }
+        }
+
+        function refreshEvents() {
+            const container = document.getElementById('events');
+            container.innerHTML = '<p class="loading">Loading events...</p>';
+            
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(events => {
+                    if (events.length === 0) {
+                        container.innerHTML = '<div class="event"><p>No events found yet.</p></div>';
+                        return;
+                    }
+                    
+                    container.innerHTML = events.map(event => `
+                        <div class="event">
+                            ${format_event(event)}
+                            <p class="timestamp">${format_display_time(event.timestamp)}</p>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="event"><p>Error loading events: ${error.message}</p></div>`;
+                });
+        }
+
+        // Refresh every 15 seconds
+        setInterval(refreshEvents, 15000);
+    </script>
+</body>
+</html>
