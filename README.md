@@ -60,12 +60,19 @@ Can access the Github UI by accesing this link https://1234-990-92i9333.ngrok-fr
 ## MongoDB Schema
 
 Field	Type	Description
+
 _id	ObjectID	Auto-generated ID
+
 request_id	String	Commit hash or PR ID
+
 author	String	GitHub username
+
 action	String	PUSH/PULL REQUEST/MERGE
+
 from_branch	String	Source branch
+
 to_branch	String	Target branch
+
 timestamp	ISODate	Event time (UTC)
 
 ## API Endpoints
